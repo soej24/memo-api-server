@@ -12,17 +12,15 @@ class MemoListResource(Resource) :
     @jwt_required()
     def post(self) :
 
-
-        # 1. 클라이언트로부터 데이터 받아온다.
+        # 1. 클라이언트로부터 데이터 받아온다. 
         # {
-        #     "title": "첫 메모 입니다",
+        #     "title": "커피",
         #     "date": "2022-07-01 11:00",
-        #     "content": "잘 부탁드립니다."
+        #     "content": "커피마시면서 개발"
         # }
-        
+
         data = request.get_json()
         user_id = get_jwt_identity()
-
 
         # 2. 메모를 데이터베이스에 저장
         try :
@@ -32,11 +30,12 @@ class MemoListResource(Resource) :
 
             # 2. 쿼리문 만들기
             query = '''insert into memo
-                        (title, date, content, user_id)
-                        values
-                        (%s , %s, %s, %s);;'''
+                    (title, date, content, user_id)
+                    values
+                    (%s , %s , %s, %s);'''
             
-            record = (data['title'], data['date'], data['content'],  user_id  )
+            record = (data['title'], data['date'], 
+                    data['content'], user_id  )
 
             # 3. 커서를 가져온다.
             cursor = connection.cursor()
@@ -57,27 +56,30 @@ class MemoListResource(Resource) :
             connection.close()
             return {"error" : str(e)}, 503
 
-        return {'result' : 'success' }, 200
+        return {'result' : 'success'}, 200
 
     @jwt_required()
     def get(self) :
-        # 1. 클라이언트로부터 데이터를 받아온다. #
-        # request.arg 는 딕셔너리다.            #
-        # offset = request.args['offset']      #
-        # offset = request.args.get('offset')  #
+        # 1. 클라이언트로부터 데이터를 받아온다.
+        # request.args 는 딕셔너리다.
+        # offset = request.args['offset']
+        # offset = request.args.get('offset')
+
         offset = request.args['offset']
         limit = request.args['limit']
+
         user_id = get_jwt_identity()
 
-        # 2. DB로부터 내 메모를 가져온다.
+        # 2. 디비로부터 내 메모를 가져온다.
         try :
             connection = get_connection()
 
-            query = '''select * from memo
+            query = '''select *
+                    from memo
                     where user_id = %s
                     limit '''+offset+''' , '''+limit+''';'''
-
-            record = (user_id,  )
+            
+            record = (user_id,)
 
             # select 문은, dictionary = True 를 해준다.
             cursor = connection.cursor(dictionary = True)
@@ -108,28 +110,28 @@ class MemoListResource(Resource) :
             cursor.close()
             connection.close()
 
-            return {"error" : str(e), 'error_no' : 20 } , 503
+            return {"error" : str(e), 'error_no' : 20}, 503
+        
+        return {'result' : 'success' ,
+                'count' : len(result_list) ,
+                'items' : result_list }, 200
 
-
-        return {'result' : 'success' , 'count' : len(result_list), 
-                'items' : result_list}, 200
 
 
 class MemoInfoResource(Resource) :
 
     @jwt_required()
-    def put(self, memo_id) :
-
+    def put(self, memo_id):
         # 1. 클라이언트로부터 데이터를 받아온다.
         # {
-        #     "title": "두번째 메모 입니다",
-        #     "date": "2022-07-02 11:00",
-        #     "content": "커피 잘 마셨습니다."
+        #     "title": "점심먹자",
+        #     "date": "2022-07-10 14:00",
+        #     "content": "짜장면"
         # }
-    
         data = request.get_json()
         user_id = get_jwt_identity()
 
+        # 2. 디비 업데이트
         try :
             # 데이터 업데이트 
             # 1. DB에 연결
@@ -142,7 +144,8 @@ class MemoInfoResource(Resource) :
                         content = %s
                         where id = %s and user_id = %s;'''
             
-            record = (data['title'],data['date'], data['content'],
+            record = (data['title'] , data['date'],
+                        data['content'] ,
                         memo_id, user_id )
 
             # 3. 커서를 가져온다.
@@ -167,13 +170,14 @@ class MemoInfoResource(Resource) :
 
         return {'result' : 'success'}, 200
 
-
     @jwt_required()
-    def delete(self,memo_id) :
-        # 1. 클라이언트로부터 데이터를 받아온다
+    def delete(self, memo_id) :
+        # 1. 클라이언트로부터 데이터를 받아온다.
+
         user_id = get_jwt_identity()
 
         # 2. 디비로부터 메모를 삭제한다.
+
         try :
             # 데이터 삭제
             # 1. DB에 연결
@@ -183,7 +187,7 @@ class MemoInfoResource(Resource) :
             query = '''delete from memo
                         where id = %s and user_id = %s;'''
             
-            record = ( memo_id, user_id)
+            record = ( memo_id, user_id )
 
             # 3. 커서를 가져온다.
             cursor = connection.cursor()
@@ -204,9 +208,5 @@ class MemoInfoResource(Resource) :
             connection.close()
             return {'error' : str(e)}, 503
 
-        return {'result' : 'success'} , 200
 
-
-
-
-        
+        return {'result' : 'success'}, 200

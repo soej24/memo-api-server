@@ -30,6 +30,5 @@ api.add_resource(UserLogoutResource, '/users/logout')
 api.add_resource(MemoListResource, '/memo')
 api.add_resource(MemoInfoResource, '/memo/<int:memo_id>')
 
-
 if __name__ == '__main__' :
     app.run()
